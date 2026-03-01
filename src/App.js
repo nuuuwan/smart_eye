@@ -14,9 +14,14 @@ function App() {
   // On mount: try to auto-unlock with saved password
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY);
-    if (!saved) { setAutoUnlocking(false); return; }
+    if (!saved) {
+      setAutoUnlocking(false);
+      return;
+    }
     unlockWithPassword(saved)
-      .then((key) => { if (key) setCryptoKey(key); })
+      .then((key) => {
+        if (key) setCryptoKey(key);
+      })
       .catch(() => {})
       .finally(() => setAutoUnlocking(false));
   }, []);
@@ -35,7 +40,14 @@ function App() {
     return (
       <>
         <CssBaseline />
-        <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <CircularProgress />
         </Box>
       </>

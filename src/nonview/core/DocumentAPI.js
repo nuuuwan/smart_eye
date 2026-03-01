@@ -7,6 +7,7 @@ import {
   generateSalt,
   VERIFY_TOKEN,
   bufToBase64,
+  base64ToBuf,
 } from "./CryptoUtils";
 
 const BASE_URL = process.env.REACT_APP_API_BASE_URL || "";
@@ -59,7 +60,8 @@ export async function unlockWithPassword(password) {
   const config = await fetchConfig();
   if (!config) throw new Error("No password has been set yet.");
 
-  const cryptoKey = await deriveKey(password, config.salt);
+  const saltBuf = base64ToBuf(config.salt);
+  const cryptoKey = await deriveKey(password, saltBuf);
   const valid = await checkVerifyToken(cryptoKey, config.verify);
   return valid ? cryptoKey : null;
 }

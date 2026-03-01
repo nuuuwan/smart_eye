@@ -137,7 +137,11 @@ export default function PasswordPage({ onAuthenticated }) {
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="current-password"
             error={confirm.length > 0 && password !== confirm}
-            helperText={confirm.length > 0 && password !== confirm ? "Passwords do not match" : ""}
+            helperText={
+              confirm.length > 0 && password !== confirm
+                ? "Passwords do not match"
+                : ""
+            }
             sx={{ mb: 2 }}
           />
 

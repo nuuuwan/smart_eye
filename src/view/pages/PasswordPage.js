@@ -177,7 +177,8 @@ export default function PasswordPage({ onAuthenticated }) {
             </Alert>
           )}
 
-          <Button            type="submit"
+          <Button
+            type="submit"
             variant="contained"
             fullWidth
             size="large"

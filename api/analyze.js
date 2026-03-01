@@ -39,6 +39,7 @@ export default async function handler(req, res) {
       imageData,
       mimeType = "image/jpeg",
       fileName = "document",
+      forceAnalyze = false,
     } = req.body;
 
     if (!imageData) {
@@ -49,15 +50,17 @@ export default async function handler(req, res) {
     const imageBuffer = Buffer.from(imageData, "base64");
     const md5 = crypto.createHash("md5").update(imageBuffer).digest("hex");
 
-    // Check if encrypted blobs already exist for this document
-    const existing = await checkEncryptedExists(md5);
-    if (existing) {
-      return res.status(200).json({
-        id: md5,
-        cached: true,
-        imageUrl: existing.imageUrl,
-        metadataUrl: existing.metadataUrl,
-      });
+    // Check if encrypted blobs already exist for this document (skip if forceAnalyze)
+    if (!forceAnalyze) {
+      const existing = await checkEncryptedExists(md5);
+      if (existing) {
+        return res.status(200).json({
+          id: md5,
+          cached: true,
+          imageUrl: existing.imageUrl,
+          metadataUrl: existing.metadataUrl,
+        });
+      }
     }
 
     // Analyze with Gemini (no storage here)

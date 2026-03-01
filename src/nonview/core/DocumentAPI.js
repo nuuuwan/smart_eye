@@ -113,19 +113,44 @@ export async function processDocument(file, cryptoKey) {
     const err = await analyzeRes.json().catch(() => ({}));
     throw new Error(err.error || "Failed to analyze document");
   }
-  const analyzed = await analyzeRes.json();
+  let analyzed = await analyzeRes.json();
 
-  // Step 2a: Already cached — decrypt and return existing metadata
+  // Step 2a: Already cached — try decrypt; if key mismatch, force re-analyze
   if (analyzed.cached) {
-    const encMeta = await fetch(analyzed.metadataUrl).then((r) => r.text());
-    const metaJson = await decryptToString(cryptoKey, encMeta);
-    const metadata = JSON.parse(metaJson);
-    // Attach URLs so DocumentCard can use DecryptedImage
-    return {
-      ...metadata,
-      imageUrl: analyzed.imageUrl,
-      metadataUrl: analyzed.metadataUrl,
-    };
+    try {
+      const encMeta = await fetch(analyzed.metadataUrl).then((r) => r.text());
+      const metaJson = await decryptToString(cryptoKey, encMeta);
+      const metadata = JSON.parse(metaJson);
+      return {
+        ...metadata,
+        imageUrl: analyzed.imageUrl,
+        metadataUrl: analyzed.metadataUrl,
+      };
+    } catch {
+      // Cached blobs were encrypted with a different key (stale salt).
+      // Force a fresh Gemini analysis and re-encrypt with the current key.
+      let reanalyzeRes;
+      try {
+        reanalyzeRes = await fetch(`${BASE_URL}/api/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageData,
+            mimeType: file.type || "image/jpeg",
+            fileName: file.name,
+            forceAnalyze: true,
+          }),
+        });
+      } catch {
+        throw new Error("Cannot reach backend when re-analyzing document.");
+      }
+      if (!reanalyzeRes.ok) {
+        const err = await reanalyzeRes.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to re-analyze document");
+      }
+      analyzed = await reanalyzeRes.json();
+      // Fall through to the new-doc encrypt+store path below
+    }
   }
 
   // Step 2b: New doc — encrypt image + metadata, POST to /api/store

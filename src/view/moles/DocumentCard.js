@@ -32,7 +32,11 @@ const TYPE_COLORS = {
 /**
  * Fetches an encrypted image blob, decrypts it, and returns an <img>.
  */
-function DecryptedImage({ imageUrl, mimeType = "image/jpeg", alt = "Document" }) {
+function DecryptedImage({
+  imageUrl,
+  mimeType = "image/jpeg",
+  alt = "Document",
+}) {
   const cryptoKey = useCryptoKey();
   const [objectUrl, setObjectUrl] = useState(null);
 
@@ -220,5 +224,3 @@ export default function DocumentCard({ doc }) {
     </Card>
   );
 }
-
-

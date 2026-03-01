@@ -91,7 +91,11 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
       )}
 
       {status === "error" && (
-        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setStatus("idle")}>
+        <Alert
+          severity="error"
+          sx={{ mt: 2 }}
+          onClose={() => setStatus("idle")}
+        >
           {errorMsg}
         </Alert>
       )}
@@ -107,6 +111,10 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
         ref={cameraInputRef}
         type="file"
         accept="image/*"
+        capture="environment"
+        onChange={onFileChange}
+        style={{ display: "none" }}
+      />
     </Box>
   );
 }

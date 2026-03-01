@@ -22,13 +22,20 @@ export default function DocumentList({ newDoc }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [pinnedDoc, setPinnedDoc] = useState(null);
 
-  const fetchDocuments = useCallback(async () => {
+  const fetchDocuments = useCallback(async (pinned) => {
     setLoading(true);
     setError("");
     try {
       const docs = await listAndDecryptDocuments(cryptoKey);
-      setDocuments(docs);
+      setDocuments((prev) => {
+        // Always keep the pinned doc at the top, even if the server list is stale
+        const anchor = pinned ?? null;
+        if (!anchor) return docs;
+        const merged = docs.filter((d) => d.id !== anchor.id);
+        return [anchor, ...merged];
+      });
     } catch (err) {
       setError(err.message || "Failed to load documents");
     } finally {
@@ -41,15 +48,16 @@ export default function DocumentList({ newDoc }) {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  // When a new doc comes in, prepend it (de-duped by id) and refresh from server
+  // When a new doc comes in, prepend it immediately, then refresh from server
+  // keeping the new doc pinned so a stale server response can't evict it.
   useEffect(() => {
     if (!newDoc) return;
+    setPinnedDoc(newDoc);
     setDocuments((prev) => {
       const filtered = prev.filter((d) => d.id !== newDoc.id);
       return [newDoc, ...filtered];
     });
-    // Refresh full list from server to ensure consistency
-    fetchDocuments();
+    fetchDocuments(newDoc);
   }, [newDoc, fetchDocuments]);
 
   const filtered = documents.filter((doc) => {
@@ -79,7 +87,7 @@ export default function DocumentList({ newDoc }) {
         <Tooltip title="Refresh list">
           <span>
             <IconButton
-              onClick={fetchDocuments}
+              onClick={() => fetchDocuments(pinnedDoc)}
               disabled={loading}
               size="small"
             >

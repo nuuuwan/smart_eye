@@ -28,6 +28,7 @@ export default async function handler(req, res) {
       }
     }
 
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     return res.status(200).json({ documents });
   } catch (err) {
     console.error("[documents] Error:", err);

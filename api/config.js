@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const config = await getConfig();
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       return res.status(200).json(config || {});
     } catch (err) {
       return res.status(500).json({ error: err.message });

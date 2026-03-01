@@ -19,7 +19,7 @@ const BASE_URL = process.env.REACT_APP_API_BASE_URL || "";
  */
 export async function fetchConfig() {
   try {
-    const res = await fetch(`${BASE_URL}/api/config`);
+    const res = await fetch(`${BASE_URL}/api/config`, { cache: "no-store" });
     if (!res.ok) return null;
     const body = await res.json();
     // Empty object means no config yet
@@ -219,7 +219,7 @@ export async function processDocument(file, cryptoKey) {
 export async function listAndDecryptDocuments(cryptoKey) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/api/documents`);
+    res = await fetch(`${BASE_URL}/api/documents`, { cache: "no-store" });
   } catch {
     throw new Error(
       "Cannot reach backend. Run 'vercel dev' instead of 'npm start'.",

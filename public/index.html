@@ -25,6 +25,26 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Smart Eye – AI Document Scanner</title>
+    <script>
+      // Restore path encoded by 404.html (GitHub Pages SPA redirect trick).
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            });
+          window.history.replaceState(
+            null,
+            null,
+            decoded.shift() +
+              (decoded.length ? "?" + decoded.join("&") : "") +
+              l.hash
+          );
+        }
+      })(window.location);
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />

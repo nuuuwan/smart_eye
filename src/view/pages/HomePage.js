@@ -1,0 +1,105 @@
+import { useState } from "react";
+import {
+  Alert,
+  Box,
+  Container,
+  Divider,
+  Paper,
+  Snackbar,
+  Typography,
+} from "@mui/material";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import ImageUploader from "../moles/ImageUploader";
+import DocumentList from "../moles/DocumentList";
+
+export default function HomePage() {
+  const [newDoc, setNewDoc] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleDocumentAnalyzed = (doc) => {
+    setNewDoc(doc);
+    setSnackbar({
+      open: true,
+      message: doc.cached
+        ? `Document already stored: "${doc.title || doc.id}"`
+        : `Document analyzed and stored: "${doc.title || doc.id}"`,
+      severity: "success",
+    });
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "grey.50",
+        pb: 6,
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          background:
+            "linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%)",
+          color: "white",
+          py: 4,
+          mb: 4,
+          boxShadow: 4,
+        }}
+      >
+        <Container maxWidth="md">
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <AutoAwesomeIcon sx={{ fontSize: 36 }} />
+            <Box>
+              <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
+                Smart Eye
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                AI-powered document scanner &amp; extractor
+              </Typography>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="md">
+        {/* Upload section */}
+        <Paper elevation={2} sx={{ borderRadius: 3, p: 3, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Scan or Upload a Document
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Upload a photo or scan of any document. The AI will extract all
+            information and store it automatically.
+          </Typography>
+          <ImageUploader onDocumentAnalyzed={handleDocumentAnalyzed} />
+        </Paper>
+
+        <Divider sx={{ mb: 4 }} />
+
+        {/* Document list */}
+        <DocumentList newDoc={newDoc} />
+      </Container>
+
+      {/* Success / info snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}

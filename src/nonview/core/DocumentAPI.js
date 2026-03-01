@@ -23,15 +23,22 @@ export function fileToBase64(file) {
  */
 export async function analyzeDocument(file) {
   const imageData = await fileToBase64(file);
-  const response = await fetch(`${BASE_URL}/api/analyze`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      imageData,
-      mimeType: file.type || "image/jpeg",
-      fileName: file.name,
-    }),
-  });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageData,
+        mimeType: file.type || "image/jpeg",
+        fileName: file.name,
+      }),
+    });
+  } catch {
+    throw new Error(
+      "Cannot reach backend. Run \`npm run dev\` (vercel dev) instead of \`npm start\`.",
+    );
+  }
 
   if (!response.ok) {
     const err = await response
@@ -48,7 +55,14 @@ export async function analyzeDocument(file) {
  * @returns {Promise<object[]>} array of document metadata
  */
 export async function listDocuments() {
-  const response = await fetch(`${BASE_URL}/api/documents`);
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}/api/documents`);
+  } catch {
+    throw new Error(
+      "Cannot reach backend. Run \`npm run dev\` (vercel dev) instead of \`npm start\`.",
+    );
+  }
   if (!response.ok) {
     const err = await response
       .json()

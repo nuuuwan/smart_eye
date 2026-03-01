@@ -2,6 +2,14 @@ import { put, list, head } from "@vercel/blob";
 
 const DOC_PREFIX = "smart-eye/documents";
 
+function assertBlobToken() {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error(
+      "BLOB_READ_WRITE_TOKEN is not set. Add it to .env.local (get one from Vercel Dashboard → Storage → Blob)",
+    );
+  }
+}
+
 /**
  * Returns the blob path prefix for a given document ID (md5 hash).
  */
@@ -14,6 +22,7 @@ export function docPath(md5) {
  * @returns {string} public URL of the stored image
  */
 export async function storeImage(md5, imageBuffer, mimeType) {
+  assertBlobToken();
   const ext = mimeTypeToExt(mimeType);
   const pathname = `${docPath(md5)}/image.${ext}`;
   const blob = await put(pathname, imageBuffer, {
@@ -29,6 +38,7 @@ export async function storeImage(md5, imageBuffer, mimeType) {
  * @returns {string} public URL of the stored JSON
  */
 export async function storeMetadata(md5, metadata) {
+  assertBlobToken();
   const pathname = `${docPath(md5)}/metadata.json`;
   const blob = await put(pathname, JSON.stringify(metadata, null, 2), {
     access: "public",
@@ -43,6 +53,7 @@ export async function storeMetadata(md5, metadata) {
  * @returns {object|null} existing metadata or null
  */
 export async function getExistingMetadata(md5) {
+  assertBlobToken();
   try {
     const pathname = `${docPath(md5)}/metadata.json`;
     const blobInfo = await head(pathname);
@@ -61,6 +72,7 @@ export async function getExistingMetadata(md5) {
  * @returns {Array} array of document metadata objects with added id/imageUrl/metadataUrl
  */
 export async function listAllDocuments() {
+  assertBlobToken();
   const allBlobs = [];
   let cursor;
 

@@ -20,7 +20,10 @@ Be thorough - capture every piece of information visible in the document.`;
 
 export async function analyzeDocumentWithGemini(base64Image, mimeType) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY environment variable not set");
+  if (!apiKey)
+    throw new Error(
+      "GEMINI_API_KEY is not set. Create a .env.local file with GEMINI_API_KEY=your_key (get one at https://aistudio.google.com/app/apikey)",
+    );
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });

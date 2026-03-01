@@ -88,8 +88,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...metadata, cached: false });
   } catch (err) {
     console.error("[analyze] Error:", err);
-    return res
-      .status(500)
-      .json({ error: err.message || "Internal server error" });
+    const message =
+      err?.message ||
+      (typeof err === "string" ? err : null) ||
+      String(err) ||
+      "Internal server error";
+    return res.status(500).json({ error: message });
   }
 }

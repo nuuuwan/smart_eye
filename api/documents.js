@@ -1,5 +1,5 @@
 import { handleCors } from "./_lib/cors.js";
-import { listDocumentStubs } from "./_lib/blobUtils.js";
+import { getIndex, listDocumentStubs, setIndex } from "./_lib/blobUtils.js";
 
 /**
  * GET /api/documents
@@ -18,7 +18,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const documents = await listDocumentStubs();
+    let documents = await getIndex();
+
+    // One-time migration: if index is empty, scan blobs and seed the index
+    if (documents.length === 0) {
+      documents = await listDocumentStubs();
+      if (documents.length > 0) {
+        await setIndex(documents).catch(() => {}); // best-effort; don't fail the request
+      }
+    }
+
     return res.status(200).json({ documents });
   } catch (err) {
     console.error("[documents] Error:", err);

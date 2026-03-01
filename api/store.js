@@ -2,6 +2,7 @@ import { handleCors } from "./_lib/cors.js";
 import {
   storeEncryptedImage,
   storeEncryptedMetadata,
+  addToIndex,
 } from "./_lib/blobUtils.js";
 
 /**
@@ -38,6 +39,9 @@ export default async function handler(req, res) {
       storeEncryptedImage(md5, encryptedImage),
       storeEncryptedMetadata(md5, encryptedMetadata),
     ]);
+
+    // Update the document index
+    await addToIndex({ id: md5, imageUrl, metadataUrl });
 
     return res.status(200).json({ imageUrl, metadataUrl });
   } catch (err) {

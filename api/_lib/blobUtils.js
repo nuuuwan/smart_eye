@@ -246,6 +246,51 @@ export async function listDocumentStubs() {
     }));
 }
 
+// ─── Document index ─────────────────────────────────────────────────────────
+
+const INDEX_PATH = "smart-eye/index.json";
+
+/**
+ * Read the document index. Returns an array of { id, imageUrl, metadataUrl }.
+ * @returns {Array}
+ */
+export async function getIndex() {
+  assertBlobToken();
+  try {
+    const info = await head(INDEX_PATH);
+    if (!info) return [];
+    const res = await fetch(info.url + `?t=${Date.now()}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Overwrite the document index.
+ * @param {Array<{ id: string, imageUrl: string, metadataUrl: string }>} entries
+ */
+export async function setIndex(entries) {
+  assertBlobToken();
+  await put(INDEX_PATH, JSON.stringify(entries), {
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+}
+
+/**
+ * Add or replace a stub in the index atomically.
+ * @param {{ id: string, imageUrl: string, metadataUrl: string }} stub
+ */
+export async function addToIndex(stub) {
+  const existing = await getIndex();
+  const filtered = existing.filter((e) => e.id !== stub.id);
+  await setIndex([stub, ...filtered]);
+}
+
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function mimeTypeToExt(mimeType) {

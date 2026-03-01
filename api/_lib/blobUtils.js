@@ -1,4 +1,4 @@
-import { put, list, head } from "@vercel/blob";
+import { put, list, head, get as blobGet } from "@vercel/blob";
 
 const DOC_PREFIX = "smart-eye/documents";
 
@@ -115,6 +115,21 @@ export async function listAllDocuments() {
   return documents.filter(Boolean);
 }
 
+async function readBlobJson(pathname) {
+  try {
+    const result = await blobGet(pathname, {
+      access: "public",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      useCache: false,
+    });
+    if (!result || !result.stream) return null;
+    const text = await new Response(result.stream).text();
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Config (salt + verify token) ────────────────────────────────────────────
 
 const CONFIG_PATH = "smart-eye/config.json";
@@ -125,15 +140,7 @@ const CONFIG_PATH = "smart-eye/config.json";
  */
 export async function getConfig() {
   assertBlobToken();
-  try {
-    const info = await head(CONFIG_PATH);
-    if (!info) return null;
-    const res = await fetch(info.url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
+  return readBlobJson(CONFIG_PATH);
 }
 
 /**
@@ -147,6 +154,7 @@ export async function setConfig(config) {
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
+    cacheControlMaxAge: 0,
   });
 }
 
@@ -256,18 +264,8 @@ const INDEX_PATH = "smart-eye/index.json";
  */
 export async function getIndex() {
   assertBlobToken();
-  try {
-    const info = await head(INDEX_PATH);
-    if (!info) return [];
-    const res = await fetch(info.url, {
-      cache: "no-store",
-      headers: { "Cache-Control": "no-cache, no-store" },
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
+  const data = await readBlobJson(INDEX_PATH);
+  return Array.isArray(data) ? data : [];
 }
 
 /**
@@ -281,6 +279,7 @@ export async function setIndex(entries) {
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
+    cacheControlMaxAge: 0,
   });
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Box,
@@ -9,78 +9,41 @@ import {
   Typography,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
-import {
-  createConfig,
-  fetchConfig,
-  unlockWithPassword,
-} from "../../nonview/core/DocumentAPI";
+import { createConfig } from "../../nonview/core/DocumentAPI";
 
 /**
  * PasswordPage
  *
- * First visit  → shows two fields (password + confirm) to set up encryption.
- * Return visit → shows one field to unlock.
+ * Always shows password + confirm. Any matching pair is accepted — the config
+ * (salt + verify token) is always (re)created with the supplied password.
  *
  * Props:
- *   onAuthenticated(cryptoKey) — called when password verified/created
+ *   onAuthenticated(cryptoKey, password)
  */
 export default function PasswordPage({ onAuthenticated }) {
-  const [loading, setLoading] = useState(true); // checking config
-  const [isFirstTime, setIsFirstTime] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Determine whether a password has been set before
-  useEffect(() => {
-    fetchConfig()
-      .then((cfg) => setIsFirstTime(!cfg || !cfg.salt))
-      .catch(() => setIsFirstTime(true))
-      .finally(() => setLoading(false));
-  }, []);
 
   const passwordsMatch = password && confirm && password === confirm;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (!password) return setError("Please enter a password.");
     if (!passwordsMatch) return setError("Passwords do not match.");
 
     setSubmitting(true);
     try {
-      const cryptoKey = isFirstTime
-        ? await createConfig(password)
-        : await unlockWithPassword(password);
-
-      if (!cryptoKey) {
-        setError("Incorrect password. Please try again.");
-        return;
-      }
+      const cryptoKey = await createConfig(password);
       onAuthenticated(cryptoKey, password);
     } catch (err) {
-      setError(err.message || "Authentication failed.");
+      setError(err.message || "Setup failed.");
     } finally {
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box
@@ -109,9 +72,7 @@ export default function PasswordPage({ onAuthenticated }) {
             Smart Eye
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {isFirstTime
-              ? "Create a password to encrypt your documents."
-              : "Enter your password to unlock your documents."}
+            Set a password to encrypt your documents.
           </Typography>
         </Box>
 

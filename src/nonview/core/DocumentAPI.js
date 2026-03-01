@@ -36,7 +36,7 @@ export async function analyzeDocument(file) {
     });
   } catch {
     throw new Error(
-      "Cannot reach backend. Run \`npm run dev\` (vercel dev) instead of \`npm start\`.",
+      "Cannot reach backend. Run 'npm run dev' (vercel dev) instead of 'npm start'.",
     );
   }
 
@@ -60,7 +60,7 @@ export async function listDocuments() {
     response = await fetch(`${BASE_URL}/api/documents`);
   } catch {
     throw new Error(
-      "Cannot reach backend. Run \`npm run dev\` (vercel dev) instead of \`npm start\`.",
+      "Cannot reach backend. Run 'npm run dev' (vercel dev) instead of 'npm start'.",
     );
   }
   if (!response.ok) {

@@ -16,6 +16,8 @@ jobs:
 
       - run: npm install
       - run: npm run build
+        env:
+          REACT_APP_API_BASE_URL: https://smart-eye-xi.vercel.app
 
       - uses: actions/upload-artifact@v4
         with:

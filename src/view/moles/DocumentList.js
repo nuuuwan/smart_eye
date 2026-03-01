@@ -39,14 +39,16 @@ export default function DocumentList({ newDoc }) {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  // When a new doc comes in, prepend it (de-duped by id)
+  // When a new doc comes in, prepend it (de-duped by id) and refresh from server
   useEffect(() => {
     if (!newDoc) return;
     setDocuments((prev) => {
       const filtered = prev.filter((d) => d.id !== newDoc.id);
       return [newDoc, ...filtered];
     });
-  }, [newDoc]);
+    // Refresh full list from server to ensure consistency
+    fetchDocuments();
+  }, [newDoc, fetchDocuments]);
 
   const filtered = documents.filter((doc) => {
     if (!search) return true;

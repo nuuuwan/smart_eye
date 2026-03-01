@@ -29,6 +29,7 @@ export async function storeImage(md5, imageBuffer, mimeType) {
     access: "public",
     contentType: mimeType,
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
   return blob.url;
 }
@@ -44,6 +45,7 @@ export async function storeMetadata(md5, metadata) {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
   return blob.url;
 }
@@ -59,7 +61,11 @@ export async function getExistingMetadata(md5) {
     const blobInfo = await head(pathname);
     if (blobInfo) {
       const res = await fetch(blobInfo.url);
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const metadata = await res.json();
+        // Attach metadataUrl from the blob (not stored inside JSON to avoid double-write)
+        return { ...metadata, metadataUrl: blobInfo.url };
+      }
     }
   } catch {
     // not found
@@ -98,7 +104,8 @@ export async function listAllDocuments() {
         const res = await fetch(blob.url);
         if (!res.ok) return null;
         const metadata = await res.json();
-        return metadata;
+        // Attach metadataUrl from the blob listing (not stored inside JSON)
+        return { ...metadata, metadataUrl: blob.url };
       } catch {
         return null;
       }

@@ -5,7 +5,6 @@ import {
   storeImage,
   storeMetadata,
   getExistingMetadata,
-  docPath,
 } from "./_lib/blobUtils.js";
 
 /**
@@ -61,7 +60,7 @@ export default async function handler(req, res) {
     // Upload image to Vercel Blob
     const imageUrl = await storeImage(md5, imageBuffer, mimeType);
 
-    // Build the full metadata record
+    // Build the full metadata record (no metadataUrl yet — avoids circular double-write)
     const metadata = {
       id: md5,
       author: extracted.author ?? null,
@@ -70,22 +69,14 @@ export default async function handler(req, res) {
       type: extracted.type ?? "unknown",
       data: extracted.data ?? {},
       imageUrl,
-      metadataUrl: null, // will be set after upload
       fileName,
       analyzedAt: new Date().toISOString(),
     };
 
-    // Upload metadata JSON to Vercel Blob
-    const metadataUrl = await storeMetadata(md5, {
-      ...metadata,
-      metadataUrl: `https://PENDING`, // placeholder
-    });
+    // Upload metadata JSON once — metadataUrl comes from the put response
+    const metadataUrl = await storeMetadata(md5, metadata);
 
-    // Re-upload with the real metadataUrl
-    metadata.metadataUrl = metadataUrl;
-    await storeMetadata(md5, metadata);
-
-    return res.status(200).json({ ...metadata, cached: false });
+    return res.status(200).json({ ...metadata, metadataUrl, cached: false });
   } catch (err) {
     console.error("[analyze] Error:", err);
     const message =

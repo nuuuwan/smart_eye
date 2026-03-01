@@ -12,7 +12,18 @@ import { useCryptoKey } from "../../nonview/core/CryptoContext";
 import { processDocument } from "../../nonview/core/DocumentAPI";
 
 const ACCEPTED =
-  "image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff";
+  "image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/heic,image/heif";
+
+const ACCEPTED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/bmp",
+  "image/tiff",
+  "image/heic",
+  "image/heif",
+]);
 
 export default function ImageUploader({ onDocumentAnalyzed }) {
   const cryptoKey = useCryptoKey();
@@ -24,6 +35,15 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
   const processFile = useCallback(
     async (file) => {
       if (!file) return;
+
+      if (!ACCEPTED_TYPES.has(file.type)) {
+        setStatus("error");
+        setErrorMsg(
+          `"${file.name}" is not a supported file type. Please upload a photo or image of a document (JPEG, PNG, WEBP, etc.).`,
+        );
+        return;
+      }
+
       setStatus("uploading");
       setErrorMsg("");
       setPreview(URL.createObjectURL(file));

@@ -40,16 +40,14 @@ export default function PasswordPage({ onAuthenticated }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const passwordsMatch = password && confirm && password === confirm;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (isFirstTime) {
-      if (!password) return setError("Please enter a password.");
-      if (password !== confirm) return setError("Passwords do not match.");
-    } else {
-      if (!password) return setError("Please enter your password.");
-    }
+    if (!password) return setError("Please enter a password.");
+    if (!passwordsMatch) return setError("Passwords do not match.");
 
     setSubmitting(true);
     try {
@@ -126,22 +124,22 @@ export default function PasswordPage({ onAuthenticated }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoFocus
-            autoComplete={isFirstTime ? "new-password" : "current-password"}
+            autoComplete="current-password"
             sx={{ mb: 2 }}
           />
 
-          {isFirstTime && (
-            <TextField
-              label="Confirm Password"
-              type="password"
-              fullWidth
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              autoComplete="new-password"
-              sx={{ mb: 2 }}
-            />
-          )}
+          <TextField
+            label="Confirm Password"
+            type="password"
+            fullWidth
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="current-password"
+            error={confirm.length > 0 && password !== confirm}
+            helperText={confirm.length > 0 && password !== confirm ? "Passwords do not match" : ""}
+            sx={{ mb: 2 }}
+          />
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
@@ -154,7 +152,7 @@ export default function PasswordPage({ onAuthenticated }) {
             variant="contained"
             fullWidth
             size="large"
-            disabled={submitting}
+            disabled={submitting || !passwordsMatch}
             sx={{ borderRadius: 2, py: 1.5 }}
           >
             {submitting ? (

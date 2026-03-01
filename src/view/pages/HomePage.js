@@ -8,7 +8,6 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ImageUploader from "../moles/ImageUploader";
 import DocumentList from "../moles/DocumentList";
 
@@ -32,39 +31,7 @@ export default function HomePage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "grey.50",
-        pb: 6,
-      }}
-    >
-      {/* Header */}
-      <Box
-        sx={{
-          background:
-            "linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%)",
-          color: "white",
-          py: 4,
-          mb: 4,
-          boxShadow: 4,
-        }}
-      >
-        <Container maxWidth="md">
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <AutoAwesomeIcon sx={{ fontSize: 36 }} />
-            <Box>
-              <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
-                Smart Eye
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                AI-powered document scanner &amp; extractor
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
+    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", pb: 6, pt: 4 }}>
       <Container maxWidth="md">
         {/* Upload section */}
         <Paper elevation={2} sx={{ borderRadius: 3, p: 3, mb: 4 }}>

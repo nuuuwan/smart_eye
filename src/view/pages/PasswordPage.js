@@ -61,7 +61,7 @@ export default function PasswordPage({ onAuthenticated }) {
         setError("Incorrect password. Please try again.");
         return;
       }
-      onAuthenticated(cryptoKey);
+      onAuthenticated(cryptoKey, password);
     } catch (err) {
       setError(err.message || "Authentication failed.");
     } finally {

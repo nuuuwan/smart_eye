@@ -23,9 +23,11 @@ function App() {
     unlockWithPassword(saved)
       .then((key) => {
         if (key) setCryptoKey(key);
+        setAutoUnlocking(false);
       })
-      .catch(() => {})
-      .finally(() => setAutoUnlocking(false));
+      .catch(() => {
+        setAutoUnlocking(false);
+      });
   }, []);
 
   const handleAuthenticated = (key, password) => {

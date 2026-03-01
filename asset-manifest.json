@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/smart_eye/static/css/main.e6c13ad2.css",
-    "main.js": "/smart_eye/static/js/main.16184db4.js",
+    "main.js": "/smart_eye/static/js/main.0d2d39f8.js",
     "static/js/453.ed1e2cc4.chunk.js": "/smart_eye/static/js/453.ed1e2cc4.chunk.js",
     "index.html": "/smart_eye/index.html",
     "main.e6c13ad2.css.map": "/smart_eye/static/css/main.e6c13ad2.css.map",
-    "main.16184db4.js.map": "/smart_eye/static/js/main.16184db4.js.map",
+    "main.0d2d39f8.js.map": "/smart_eye/static/js/main.0d2d39f8.js.map",
     "453.ed1e2cc4.chunk.js.map": "/smart_eye/static/js/453.ed1e2cc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.16184db4.js"
+    "static/js/main.0d2d39f8.js"
   ]
 }

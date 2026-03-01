@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -13,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useCryptoKey } from "../../nonview/core/CryptoContext";
 import { decryptImageToObjectURL } from "../../nonview/core/CryptoUtils";
 import JSONView from "../atoms/JSONView";
@@ -80,6 +83,7 @@ function DecryptedImage({
 }
 
 export default function DocumentCard({ doc }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const color = TYPE_COLORS[doc.type?.toLowerCase()] ?? "default";
 
@@ -183,9 +187,18 @@ export default function DocumentCard({ doc }) {
                 <ExpandMoreIcon />
               </IconButton>
             </Tooltip>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
               {expanded ? "Hide" : "Show"} extracted data
             </Typography>
+            <Button
+              size="small"
+              variant="text"
+              endIcon={<OpenInNewIcon fontSize="small" />}
+              onClick={() => navigate(`/doc/${doc.id}`, { state: { doc } })}
+              sx={{ textTransform: "none", fontSize: "0.75rem" }}
+            >
+              View
+            </Button>
           </Stack>
 
           <Collapse in={expanded} timeout="auto" unmountOnExit>

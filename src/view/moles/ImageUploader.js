@@ -8,7 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { analyzeDocument } from "../../nonview/core/DocumentAPI";
 
 const ACCEPTED =
@@ -19,7 +18,6 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef();
-  const cameraInputRef = useRef();
 
   const processFile = useCallback(
     async (file) => {
@@ -78,14 +76,7 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
             startIcon={<CloudUploadIcon />}
             onClick={() => fileInputRef.current?.click()}
           >
-            Upload File
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<CameraAltIcon />}
-            onClick={() => cameraInputRef.current?.click()}
-          >
-            Take Photo
+            Add Photo
           </Button>
         </Box>
       )}
@@ -104,14 +95,6 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
         ref={fileInputRef}
         type="file"
         accept={ACCEPTED}
-        onChange={onFileChange}
-        style={{ display: "none" }}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
         onChange={onFileChange}
         style={{ display: "none" }}
       />

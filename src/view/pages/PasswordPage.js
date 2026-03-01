@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -9,41 +9,84 @@ import {
   Typography,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
-import { createConfig } from "../../nonview/core/DocumentAPI";
+import {
+  createConfig,
+  fetchConfig,
+  unlockWithPassword,
+} from "../../nonview/core/DocumentAPI";
 
-/**
- * PasswordPage
- *
- * Always shows password + confirm. Any matching pair is accepted — the config
- * (salt + verify token) is always (re)created with the supplied password.
- *
- * Props:
- *   onAuthenticated(cryptoKey, password)
- */
 export default function PasswordPage({ onAuthenticated }) {
+  const [checking, setChecking] = useState(true); // loading config
+  const [hasConfig, setHasConfig] = useState(false); // existing salt stored
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [wrongKey, setWrongKey] = useState(false); // password ≠ stored key
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchConfig()
+      .then((cfg) => setHasConfig(!!(cfg && cfg.salt)))
+      .catch(() => setHasConfig(false))
+      .finally(() => setChecking(false));
+  }, []);
 
   const passwordsMatch = password && confirm && password === confirm;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!password) return setError("Please enter a password.");
-    if (!passwordsMatch) return setError("Passwords do not match.");
+    setWrongKey(false);
+    if (!passwordsMatch) return;
 
+    setSubmitting(true);
+    try {
+      let cryptoKey;
+      if (hasConfig) {
+        cryptoKey = await unlockWithPassword(password);
+        if (!cryptoKey) {
+          setWrongKey(true);
+          return;
+        }
+      } else {
+        cryptoKey = await createConfig(password);
+      }
+      onAuthenticated(cryptoKey, password);
+    } catch (err) {
+      setError(err.message || "Failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setWrongKey(false);
+    setError("");
     setSubmitting(true);
     try {
       const cryptoKey = await createConfig(password);
       onAuthenticated(cryptoKey, password);
     } catch (err) {
-      setError(err.message || "Setup failed.");
+      setError(err.message || "Reset failed.");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (checking) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -58,12 +101,7 @@ export default function PasswordPage({ onAuthenticated }) {
     >
       <Paper
         elevation={4}
-        sx={{
-          p: 4,
-          width: "100%",
-          maxWidth: 380,
-          borderRadius: 3,
-        }}
+        sx={{ p: 4, width: "100%", maxWidth: 380, borderRadius: 3 }}
       >
         {/* Icon + title */}
         <Box sx={{ textAlign: "center", mb: 3 }}>
@@ -72,7 +110,9 @@ export default function PasswordPage({ onAuthenticated }) {
             Smart Eye
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Set a password to encrypt your documents.
+            {hasConfig
+              ? "Enter your password to unlock your documents."
+              : "Create a password to encrypt your documents."}
           </Typography>
         </Box>
 
@@ -83,9 +123,12 @@ export default function PasswordPage({ onAuthenticated }) {
             fullWidth
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setWrongKey(false);
+            }}
             autoFocus
-            autoComplete="current-password"
+            autoComplete={hasConfig ? "current-password" : "new-password"}
             sx={{ mb: 2 }}
           />
 
@@ -95,8 +138,11 @@ export default function PasswordPage({ onAuthenticated }) {
             fullWidth
             required
             value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            autoComplete="current-password"
+            onChange={(e) => {
+              setConfirm(e.target.value);
+              setWrongKey(false);
+            }}
+            autoComplete={hasConfig ? "current-password" : "new-password"}
             error={confirm.length > 0 && password !== confirm}
             helperText={
               confirm.length > 0 && password !== confirm
@@ -106,14 +152,32 @@ export default function PasswordPage({ onAuthenticated }) {
             sx={{ mb: 2 }}
           />
 
+          {wrongKey && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              This password doesn&apos;t match your stored documents.{" "}
+              <strong>Reset encryption?</strong> Existing documents will become
+              unreadable.
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  onClick={handleReset}
+                  disabled={submitting}
+                >
+                  Reset &amp; use this password
+                </Button>
+              </Box>
+            </Alert>
+          )}
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
               {error}
             </Alert>
           )}
 
-          <Button
-            type="submit"
+          <Button            type="submit"
             variant="contained"
             fullWidth
             size="large"
@@ -122,10 +186,10 @@ export default function PasswordPage({ onAuthenticated }) {
           >
             {submitting ? (
               <CircularProgress size={22} color="inherit" />
-            ) : isFirstTime ? (
-              "Create Password"
-            ) : (
+            ) : hasConfig ? (
               "Unlock"
+            ) : (
+              "Create Password"
             )}
           </Button>
         </Box>

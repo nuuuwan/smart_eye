@@ -2,15 +2,14 @@ import { useState } from "react";
 import {
   Alert,
   Box,
+  Button,
   Container,
   Divider,
-  IconButton,
   Paper,
   Snackbar,
-  Tooltip,
   Typography,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ImageUploader from "../moles/ImageUploader";
 import DocumentList from "../moles/DocumentList";
 
@@ -42,11 +41,16 @@ export default function HomePage({ onSignOut }) {
             <Typography variant="h6" sx={{ flex: 1 }}>
               Scan or Upload a Document
             </Typography>
-            <Tooltip title="Sign out">
-              <IconButton size="small" onClick={onSignOut} color="default">
-                <LogoutIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<LockOpenIcon />}
+              onClick={onSignOut}
+              sx={{ borderRadius: 2, textTransform: "none" }}
+            >
+              Sign Out
+            </Button>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Upload a photo or scan of any document. The AI will extract all

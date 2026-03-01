@@ -38,7 +38,8 @@
           window.history.replaceState(
             null,
             null,
-            decoded.shift() +
+            l.pathname.replace(/\/$/, "") +
+              decoded.shift() +
               (decoded.length ? "?" + decoded.join("&") : "") +
               l.hash
           );

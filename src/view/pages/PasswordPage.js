@@ -42,7 +42,9 @@ export default function PasswordPage({ onAuthenticated }) {
       let cryptoKey;
       if (hasConfig) {
         // Try existing key; if password doesn't match, treat as new password
-        cryptoKey = await unlockWithPassword(password) ?? await createConfig(password);
+        cryptoKey =
+          (await unlockWithPassword(password)) ??
+          (await createConfig(password));
       } else {
         cryptoKey = await createConfig(password);
       }

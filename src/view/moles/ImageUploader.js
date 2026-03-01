@@ -8,12 +8,14 @@ import {
   Typography,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { analyzeDocument } from "../../nonview/core/DocumentAPI";
+import { useCryptoKey } from "../../nonview/core/CryptoContext";
+import { processDocument } from "../../nonview/core/DocumentAPI";
 
 const ACCEPTED =
   "image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff";
 
 export default function ImageUploader({ onDocumentAnalyzed }) {
+  const cryptoKey = useCryptoKey();
   const [status, setStatus] = useState("idle"); // idle | uploading | error
   const [errorMsg, setErrorMsg] = useState("");
   const [preview, setPreview] = useState(null);
@@ -27,7 +29,7 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
       setPreview(URL.createObjectURL(file));
 
       try {
-        const result = await analyzeDocument(file);
+        const result = await processDocument(file, cryptoKey);
         setStatus("idle");
         setPreview(null);
         onDocumentAnalyzed?.(result);
@@ -36,7 +38,7 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
         setErrorMsg(err.message || "Analysis failed");
       }
     },
-    [onDocumentAnalyzed],
+    [onDocumentAnalyzed, cryptoKey],
   );
 
   const onFileChange = (e) => {
@@ -65,7 +67,7 @@ export default function ImageUploader({ onDocumentAnalyzed }) {
           )}
           <CircularProgress size={32} sx={{ mb: 1 }} />
           <Typography variant="body2" color="text.secondary">
-            Analyzing document with AI…
+            Analyzing &amp; encrypting document…
           </Typography>
           <LinearProgress sx={{ mt: 2, borderRadius: 1 }} />
         </Box>

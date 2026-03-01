@@ -1,11 +1,14 @@
 import { handleCors } from "./_lib/cors.js";
-import { listAllDocuments } from "./_lib/blobUtils.js";
+import { listDocumentStubs } from "./_lib/blobUtils.js";
 
 /**
  * GET /api/documents
  *
- * Returns an array of all stored document metadata objects, each containing:
- *   id, author, title, date, type, data, imageUrl, metadataUrl, fileName, analyzedAt
+ * Returns lightweight document stubs (no decryption happens server-side).
+ * The client fetches metadataUrl and decrypts with its CryptoKey.
+ *
+ * Response:
+ *   { documents: [{ id, imageUrl, metadataUrl }] }
  */
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -15,11 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const documents = await listAllDocuments();
-    // Sort newest first
-    documents.sort(
-      (a, b) => new Date(b.analyzedAt ?? 0) - new Date(a.analyzedAt ?? 0),
-    );
+    const documents = await listDocumentStubs();
     return res.status(200).json({ documents });
   } catch (err) {
     console.error("[documents] Error:", err);

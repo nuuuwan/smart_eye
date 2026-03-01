@@ -115,6 +115,139 @@ export async function listAllDocuments() {
   return documents.filter(Boolean);
 }
 
+// ─── Config (salt + verify token) ────────────────────────────────────────────
+
+const CONFIG_PATH = "smart-eye/config.json";
+
+/**
+ * Read the global config blob ({salt, verify}).
+ * @returns {object|null}
+ */
+export async function getConfig() {
+  assertBlobToken();
+  try {
+    const info = await head(CONFIG_PATH);
+    if (!info) return null;
+    const res = await fetch(info.url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write the global config blob.
+ * @param {{ salt: string, verify: string }} config
+ */
+export async function setConfig(config) {
+  assertBlobToken();
+  await put(CONFIG_PATH, JSON.stringify(config), {
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+}
+
+// ─── Encrypted storage ───────────────────────────────────────────────────────
+
+/**
+ * Store AES-GCM encrypted image (base64 string).
+ * @returns {string} public URL
+ */
+export async function storeEncryptedImage(md5, encryptedBase64) {
+  assertBlobToken();
+  const pathname = `${docPath(md5)}/image.enc`;
+  const blob = await put(pathname, encryptedBase64, {
+    access: "public",
+    contentType: "text/plain",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+  return blob.url;
+}
+
+/**
+ * Store AES-GCM encrypted metadata JSON (base64 string).
+ * @returns {string} public URL
+ */
+export async function storeEncryptedMetadata(md5, encryptedBase64) {
+  assertBlobToken();
+  const pathname = `${docPath(md5)}/metadata.enc`;
+  const blob = await put(pathname, encryptedBase64, {
+    access: "public",
+    contentType: "text/plain",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+  return blob.url;
+}
+
+/**
+ * Check whether encrypted blobs already exist for this document.
+ * @returns {{ metadataUrl: string, imageUrl: string } | null}
+ */
+export async function checkEncryptedExists(md5) {
+  assertBlobToken();
+  try {
+    const [imgInfo, metaInfo] = await Promise.all([
+      head(`${docPath(md5)}/image.enc`),
+      head(`${docPath(md5)}/metadata.enc`),
+    ]);
+    if (imgInfo && metaInfo) {
+      return { imageUrl: imgInfo.url, metadataUrl: metaInfo.url };
+    }
+  } catch {
+    // not found
+  }
+  return null;
+}
+
+/**
+ * List all documents as lightweight stubs (no decryption).
+ * @returns {Array<{ id: string, imageUrl: string, metadataUrl: string }>}
+ */
+export async function listDocumentStubs() {
+  assertBlobToken();
+  const allBlobs = [];
+  let cursor;
+
+  do {
+    const result = await list({
+      prefix: `${DOC_PREFIX}/`,
+      cursor,
+      limit: 1000,
+    });
+    allBlobs.push(...result.blobs);
+    cursor = result.cursor;
+    if (!result.hasMore) break;
+  } while (true);
+
+  // Group by md5
+  const byMd5 = {};
+  for (const b of allBlobs) {
+    // pathname: smart-eye/documents/{md5}/image.enc  or  metadata.enc
+    const parts = b.pathname.split("/");
+    if (parts.length < 4) continue;
+    const md5 = parts[2];
+    const file = parts[3];
+    if (!byMd5[md5]) byMd5[md5] = {};
+    if (file === "image.enc") byMd5[md5].imageUrl = b.url;
+    if (file === "metadata.enc") byMd5[md5].metadataUrl = b.url;
+  }
+
+  return Object.entries(byMd5)
+    .filter(([, v]) => v.imageUrl && v.metadataUrl)
+    .map(([id, v]) => ({
+      id,
+      imageUrl: v.imageUrl,
+      metadataUrl: v.metadataUrl,
+    }));
+}
+
+// ─── Internal helpers ─────────────────────────────────────────────────────────
+
 function mimeTypeToExt(mimeType) {
   const map = {
     "image/jpeg": "jpg",

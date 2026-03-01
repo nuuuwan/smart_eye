@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   Collapse,
   Divider,
   IconButton,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import CodeIcon from "@mui/icons-material/Code";
+import { useCryptoKey } from "../../nonview/core/CryptoContext";
+import { decryptImageToObjectURL } from "../../nonview/core/CryptoUtils";
 import JSONView from "../atoms/JSONView";
 
 const TYPE_COLORS = {
@@ -28,6 +28,52 @@ const TYPE_COLORS = {
   certificate: "success",
   unknown: "default",
 };
+
+/**
+ * Fetches an encrypted image blob, decrypts it, and returns an <img>.
+ */
+function DecryptedImage({ imageUrl, mimeType = "image/jpeg", alt = "Document" }) {
+  const cryptoKey = useCryptoKey();
+  const [objectUrl, setObjectUrl] = useState(null);
+
+  useEffect(() => {
+    if (!imageUrl || !cryptoKey) return;
+    let revoked = false;
+    (async () => {
+      try {
+        const encB64 = await fetch(imageUrl).then((r) => r.text());
+        const url = await decryptImageToObjectURL(cryptoKey, encB64, mimeType);
+        if (!revoked) setObjectUrl(url);
+      } catch {
+        // leave as null — show skeleton
+      }
+    })();
+    return () => {
+      revoked = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageUrl, cryptoKey]);
+
+  if (!objectUrl) {
+    return (
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        sx={{ minHeight: 120, height: "100%" }}
+      />
+    );
+  }
+
+  return (
+    <Box
+      component="img"
+      src={objectUrl}
+      alt={alt}
+      sx={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 120 }}
+    />
+  );
+}
 
 export default function DocumentCard({ doc }) {
   const [expanded, setExpanded] = useState(false);
@@ -67,35 +113,11 @@ export default function DocumentCard({ doc }) {
               position: "relative",
             }}
           >
-            <CardMedia
-              component="img"
-              image={doc.imageUrl}
+            <DecryptedImage
+              imageUrl={doc.imageUrl}
+              mimeType={doc.mimeType || "image/jpeg"}
               alt={doc.title || "Document"}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                minHeight: 120,
-              }}
             />
-            <Tooltip title="View full image">
-              <IconButton
-                size="small"
-                component="a"
-                href={doc.imageUrl}
-                target="_blank"
-                rel="noopener"
-                sx={{
-                  position: "absolute",
-                  top: 4,
-                  right: 4,
-                  bgcolor: "rgba(255,255,255,0.85)",
-                  "&:hover": { bgcolor: "white" },
-                }}
-              >
-                <OpenInNewIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
           </Box>
         )}
 
@@ -160,19 +182,6 @@ export default function DocumentCard({ doc }) {
             <Typography variant="caption" color="text.secondary">
               {expanded ? "Hide" : "Show"} extracted data
             </Typography>
-            {doc.metadataUrl && (
-              <Tooltip title="View raw JSON">
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={doc.metadataUrl}
-                  target="_blank"
-                  rel="noopener"
-                >
-                  <CodeIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
           </Stack>
 
           <Collapse in={expanded} timeout="auto" unmountOnExit>
@@ -211,3 +220,5 @@ export default function DocumentCard({ doc }) {
     </Card>
   );
 }
+
+

@@ -1,14 +1,13 @@
 import crypto from "crypto";
 import { handleCors } from "./_lib/cors.js";
 import { analyzeDocumentWithGemini } from "./_lib/gemini.js";
-import {
-  storeImage,
-  storeMetadata,
-  getExistingMetadata,
-} from "./_lib/blobUtils.js";
+import { checkEncryptedExists } from "./_lib/blobUtils.js";
 
 /**
  * POST /api/analyze
+ *
+ * Analyzes an image with Gemini AI and returns extracted metadata.
+ * Does NOT store anything — the client encrypts and calls /api/store.
  *
  * Body (JSON):
  *   imageData  - base64-encoded image string (no data: URI prefix)
@@ -17,14 +16,16 @@ import {
  *
  * Returns (JSON):
  *   id          - MD5 hash of the image content
- *   author      - document author / source
- *   title       - document title
- *   date        - document date (ISO 8601 or null)
- *   type        - document type
- *   data        - all structured content
- *   imageUrl    - Vercel Blob URL of the stored image
- *   metadataUrl - Vercel Blob URL of the stored JSON
- *   cached      - true if the result was already stored
+ *   cached      - true if encrypted blobs already exist in storage
+ *   imageUrl    - (only when cached:true) existing encrypted image URL
+ *   metadataUrl - (only when cached:true) existing encrypted metadata URL
+ *   author      - (only when cached:false) extracted from LLM
+ *   title       - (only when cached:false)
+ *   date        - (only when cached:false)
+ *   type        - (only when cached:false)
+ *   data        - (only when cached:false)
+ *   fileName    - (only when cached:false)
+ *   analyzedAt  - (only when cached:false) ISO timestamp
  */
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -48,35 +49,31 @@ export default async function handler(req, res) {
     const imageBuffer = Buffer.from(imageData, "base64");
     const md5 = crypto.createHash("md5").update(imageBuffer).digest("hex");
 
-    // Check if this document was already analyzed
-    const existing = await getExistingMetadata(md5);
+    // Check if encrypted blobs already exist for this document
+    const existing = await checkEncryptedExists(md5);
     if (existing) {
-      return res.status(200).json({ ...existing, cached: true });
+      return res.status(200).json({
+        id: md5,
+        cached: true,
+        imageUrl: existing.imageUrl,
+        metadataUrl: existing.metadataUrl,
+      });
     }
 
-    // Analyze with Gemini
+    // Analyze with Gemini (no storage here)
     const extracted = await analyzeDocumentWithGemini(imageData, mimeType);
 
-    // Upload image to Vercel Blob
-    const imageUrl = await storeImage(md5, imageBuffer, mimeType);
-
-    // Build the full metadata record (no metadataUrl yet — avoids circular double-write)
-    const metadata = {
+    return res.status(200).json({
       id: md5,
+      cached: false,
       author: extracted.author ?? null,
       title: extracted.title ?? null,
       date: extracted.date ?? null,
       type: extracted.type ?? "unknown",
       data: extracted.data ?? {},
-      imageUrl,
       fileName,
       analyzedAt: new Date().toISOString(),
-    };
-
-    // Upload metadata JSON once — metadataUrl comes from the put response
-    const metadataUrl = await storeMetadata(md5, metadata);
-
-    return res.status(200).json({ ...metadata, metadataUrl, cached: false });
+    });
   } catch (err) {
     console.error("[analyze] Error:", err);
     const message =

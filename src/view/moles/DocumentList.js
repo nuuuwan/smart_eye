@@ -13,9 +13,11 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import DocumentCard from "./DocumentCard";
-import { listDocuments } from "../../nonview/core/DocumentAPI";
+import { useCryptoKey } from "../../nonview/core/CryptoContext";
+import { listAndDecryptDocuments } from "../../nonview/core/DocumentAPI";
 
 export default function DocumentList({ newDoc }) {
+  const cryptoKey = useCryptoKey();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,14 +27,14 @@ export default function DocumentList({ newDoc }) {
     setLoading(true);
     setError("");
     try {
-      const docs = await listDocuments();
+      const docs = await listAndDecryptDocuments(cryptoKey);
       setDocuments(docs);
     } catch (err) {
       setError(err.message || "Failed to load documents");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [cryptoKey]);
 
   // Load on mount
   useEffect(() => {

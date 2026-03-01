@@ -48,8 +48,5 @@
     ]
   },
   "homepage": "https://nuuuwan.github.io/smart_eye",
-  "proxy": "http://localhost:3001",
-  "devDependencies": {
-    "vercel": "^50.25.4"
-  }
+  "proxy": "http://localhost:3001"
 }

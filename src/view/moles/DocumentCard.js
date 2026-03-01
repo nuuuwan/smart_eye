@@ -187,7 +187,11 @@ export default function DocumentCard({ doc }) {
                 <ExpandMoreIcon />
               </IconButton>
             </Tooltip>
-            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ flex: 1 }}
+            >
               {expanded ? "Hide" : "Show"} extracted data
             </Typography>
             <Button

@@ -32,7 +32,11 @@ const TYPE_COLORS = {
   unknown: "default",
 };
 
-function DecryptedFullImage({ imageUrl, mimeType = "image/jpeg", alt = "Document" }) {
+function DecryptedFullImage({
+  imageUrl,
+  mimeType = "image/jpeg",
+  alt = "Document",
+}) {
   const cryptoKey = useCryptoKey();
   const [objectUrl, setObjectUrl] = useState(null);
 
@@ -56,7 +60,14 @@ function DecryptedFullImage({ imageUrl, mimeType = "image/jpeg", alt = "Document
   }, [imageUrl, cryptoKey]);
 
   if (!objectUrl) {
-    return <Skeleton variant="rectangular" width="100%" height={300} sx={{ borderRadius: 2 }} />;
+    return (
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={300}
+        sx={{ borderRadius: 2 }}
+      />
+    );
   }
 
   return (
@@ -196,7 +207,12 @@ export default function DocumentPage({ onSignOut }) {
               </Stack>
 
               {analyzedDate && (
-                <Typography variant="caption" color="text.disabled" display="block" sx={{ mb: 2 }}>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  display="block"
+                  sx={{ mb: 2 }}
+                >
                   Analyzed {analyzedDate}
                 </Typography>
               )}
@@ -204,13 +220,22 @@ export default function DocumentPage({ onSignOut }) {
               <Divider sx={{ mb: 2 }} />
 
               {/* Extracted data */}
-              <Typography variant="overline" color="text.secondary" display="block" sx={{ mb: 1 }}>
+              <Typography
+                variant="overline"
+                color="text.secondary"
+                display="block"
+                sx={{ mb: 1 }}
+              >
                 Extracted Content
               </Typography>
               <JSONView data={doc.data} />
 
               <Divider sx={{ mt: 2, mb: 1 }} />
-              <Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ fontFamily: "monospace" }}
+              >
                 ID: {doc.id}
               </Typography>
             </Box>

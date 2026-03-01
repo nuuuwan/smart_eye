@@ -24,24 +24,27 @@ export default function DocumentList({ newDoc }) {
   const [search, setSearch] = useState("");
   const [pinnedDoc, setPinnedDoc] = useState(null);
 
-  const fetchDocuments = useCallback(async (pinned) => {
-    setLoading(true);
-    setError("");
-    try {
-      const docs = await listAndDecryptDocuments(cryptoKey);
-      setDocuments((prev) => {
-        // Always keep the pinned doc at the top, even if the server list is stale
-        const anchor = pinned ?? null;
-        if (!anchor) return docs;
-        const merged = docs.filter((d) => d.id !== anchor.id);
-        return [anchor, ...merged];
-      });
-    } catch (err) {
-      setError(err.message || "Failed to load documents");
-    } finally {
-      setLoading(false);
-    }
-  }, [cryptoKey]);
+  const fetchDocuments = useCallback(
+    async (pinned) => {
+      setLoading(true);
+      setError("");
+      try {
+        const docs = await listAndDecryptDocuments(cryptoKey);
+        setDocuments((prev) => {
+          // Always keep the pinned doc at the top, even if the server list is stale
+          const anchor = pinned ?? null;
+          if (!anchor) return docs;
+          const merged = docs.filter((d) => d.id !== anchor.id);
+          return [anchor, ...merged];
+        });
+      } catch (err) {
+        setError(err.message || "Failed to load documents");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [cryptoKey],
+  );
 
   // Load on mount
   useEffect(() => {

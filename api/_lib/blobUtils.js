@@ -259,7 +259,10 @@ export async function getIndex() {
   try {
     const info = await head(INDEX_PATH);
     if (!info) return [];
-    const res = await fetch(info.url + `?t=${Date.now()}`);
+    const res = await fetch(info.url, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store" },
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch {
